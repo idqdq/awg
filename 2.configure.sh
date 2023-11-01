@@ -1,0 +1,62 @@
+#!/bin/bash
+# this scripts generate keys and configs for a server and a client
+# issue source ./env command first
+
+WIREGUARD_SERVER_PRIVATE_KEY=$(wg genkey)
+echo $WIREGUARD_SERVER_PRIVATE_KEY > wg_server_private_key.key
+
+WIREGUARD_SERVER_PUBLIC_KEY=$(echo $WIREGUARD_SERVER_PRIVATE_KEY | wg pubkey)
+echo $WIREGUARD_SERVER_PUBLIC_KEY > wg_server_public_key.key
+
+WIREGUARD_PSK=$(wg genpsk)
+echo $WIREGUARD_PSK > wg_psk.key
+
+WIREGUARD_CLIENT_PRIVATE_KEY=$(wg genkey)
+WIREGUARD_CLIENT_PUBLIC_KEY=$(echo $WIREGUARD_CLIENT_PRIVATE_KEY | wg pubkey)
+
+
+cat > wg0.conf <<EOF
+[Interface]
+PrivateKey = $WIREGUARD_SERVER_PRIVATE_KEY
+Address = $WIREGUARD_SUBNET_IP/$WIREGUARD_SUBNET_CIDR
+ListenPort = $AWG_SERVER_PORT
+Jc = $JUNK_PACKET_COUNT
+Jmin = $JUNK_PACKET_MIN_SIZE
+Jmax = $JUNK_PACKET_MAX_SIZE
+S1 = $INIT_PACKET_JUNK_SIZE
+S2 = $RESPONSE_PACKET_JUNK_SIZE
+H1 = $INIT_PACKET_MAGIC_HEADER
+H2 = $RESPONSE_PACKET_MAGIC_HEADER
+H3 = $UNDERLOAD_PACKET_MAGIC_HEADER
+H4 = $TRANSPORT_PACKET_MAGIC_HEADER
+
+[Peer]
+PublicKey = $WIREGUARD_CLIENT_PUBLIC_KEY
+PresharedKey = $WIREGUARD_PSK
+AllowedIPs = $WIREGUARD_CLIENT_IP/32, ::/0
+EOF
+
+cat > wg_client.conf <<EOF
+[Interface]
+Address = $WIREGUARD_CLIENT_IP/32
+DNS = $PRIMARY_DNS, $SECONDARY_DNS
+PrivateKey = $WIREGUARD_CLIENT_PRIVATE_KEY
+Jc = $JUNK_PACKET_COUNT
+Jmin = $JUNK_PACKET_MIN_SIZE
+Jmax = $JUNK_PACKET_MAX_SIZE
+S1 = $INIT_PACKET_JUNK_SIZE
+S2 = $RESPONSE_PACKET_JUNK_SIZE
+H1 = $INIT_PACKET_MAGIC_HEADER
+H2 = $RESPONSE_PACKET_MAGIC_HEADER
+H3 = $UNDERLOAD_PACKET_MAGIC_HEADER
+H4 = $TRANSPORT_PACKET_MAGIC_HEADER
+
+[Peer]
+PublicKey = $WIREGUARD_SERVER_PUBLIC_KEY
+PresharedKey = $WIREGUARD_PSK
+AllowedIPs = 0.0.0.0/0, ::/0
+Endpoint = $SERVER_IP_ADDRESS:$AWG_SERVER_PORT
+PersistentKeepalive = 25
+EOF
+
+if [ -f /usr/bin/qrencode ]; then (/usr/bin/qrencode -t PNG -o wg_client.png < wg_client.conf); fi
