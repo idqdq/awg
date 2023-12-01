@@ -11,6 +11,8 @@ echo $WIREGUARD_SERVER_PUBLIC_KEY > wg_server_public_key.key
 WIREGUARD_PSK=$(wg genpsk)
 echo $WIREGUARD_PSK > wg_psk.key
 
+# the very first client config so the server would be aware of on a first run
+source ./configure_client.sh
 
 cat > wg0.conf <<EOF
 [Interface]
