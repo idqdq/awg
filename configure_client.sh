@@ -1,3 +1,12 @@
+#/bin/bash
+# creates wg_client.conf and a corresponding QR code .png 
+# it must be run with a mandatory argument: IP address of a new client
+
+if [[ $# -eq 0 ]] ; then
+    echo "a new client's IP address expected"
+    exit 1
+fi
+
 
 WIREGUARD_CLIENT_PRIVATE_KEY=$(wg genkey)
 WIREGUARD_CLIENT_PUBLIC_KEY=$(echo $WIREGUARD_CLIENT_PRIVATE_KEY | wg pubkey)
@@ -7,7 +16,7 @@ WIREGUARD_SERVER_PUBLIC_KEY=$(cat wg_server_public_key.key)
 
 cat > wg_client.conf <<EOF
 [Interface]
-Address = $WIREGUARD_CLIENT_IP/32
+Address = $1/32
 DNS = $PRIMARY_DNS, $SECONDARY_DNS
 PrivateKey = $WIREGUARD_CLIENT_PRIVATE_KEY
 Jc = $JUNK_PACKET_COUNT
@@ -29,3 +38,6 @@ PersistentKeepalive = 25
 EOF
 
 if [ -f /usr/bin/qrencode ]; then (/usr/bin/qrencode -t PNG -o wg_client.png < wg_client.conf); fi
+
+echo "docker exec -it awg wg set wg0 peer $WIREGUARD_CLIENT_PUBLIC_KEY allowed-ips $1/32" > wg_add_client_key_to_a_server.cmd
+
