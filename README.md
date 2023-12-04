@@ -16,6 +16,8 @@ scripts were made and tested on Ubuntu 20.04
 
 ## scripts
 ### install server
+**Note:** should be run once and never again
+
 First fill up the **.env** file
 then run a command
 ```sh 
@@ -41,16 +43,16 @@ just copy *wg_client.conf* to your device or scan QR code from *wg_client.png*
 
 
 ### create new clients
-Note: script uses files *wg_psk.keys* and *wg_server_public_key.key* as well as *ENV* variables so do not delete them
+**Note:** the script uses files *wg_psk.keys* and *wg_server_public_key.key* as well as *ENV* variables so do not delete them
 
-To create a new user first choose an IP address from the WIREGUARD_SUBNET_IP that isn't in use
+To create a new user first choose an IP address from the WIREGUARD_SUBNET_IP subnet that isn't in use yet
 
 now just enter 
 ```sh 
-user@srv:~/awg$ bash configure_client <IP>
+user@srv:~/awg$ bash configure_client.sh <IP>
 ```
 
-3 files would be created (or renewed):  
+Three files would be created (or renewed):  
 1. wg_client.conf
 2. wg_client.png
 3. wg_add_client_key_to_a_server.cmd
